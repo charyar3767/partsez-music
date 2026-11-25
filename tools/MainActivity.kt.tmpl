@@ -1,0 +1,101 @@
+package __PAKET__
+
+import android.app.Activity
+import android.app.RecoverableSecurityException
+import android.content.ContentUris
+import android.content.Intent
+import android.net.Uri
+import android.os.Build
+import android.provider.MediaStore
+import com.ryanheise.audioservice.AudioServiceActivity
+import io.flutter.embedding.engine.FlutterEngine
+import io.flutter.plugin.common.MethodChannel
+
+class MainActivity : AudioServiceActivity() {
+    private val kanalAdy = "partsez/media"
+    private val pozmakKody = 4101
+    private var garashylyanNetije: MethodChannel.Result? = null
+    private var garashylyanUri: Uri? = null
+
+    override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
+        super.configureFlutterEngine(flutterEngine)
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, kanalAdy)
+            .setMethodCallHandler { call, result ->
+                when (call.method) {
+                    "deleteAudio" -> {
+                        val id = (call.argument<Any>("id") as? Number)?.toLong()
+                        if (id == null) {
+                            result.error("ARG", "id yok", null)
+                        } else {
+                            aydymyPoz(id, result)
+                        }
+                    }
+                    else -> result.notImplemented()
+                }
+            }
+    }
+
+    private fun aydymyPoz(id: Long, result: MethodChannel.Result) {
+        if (garashylyanNetije != null) {
+            result.error("BUSY", "Basga amal dowam edyar", null)
+            return
+        }
+        val uri = ContentUris.withAppendedId(
+            MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, id
+        )
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                val pi = MediaStore.createDeleteRequest(contentResolver, listOf(uri))
+                garashylyanNetije = result
+                garashylyanUri = uri
+                startIntentSenderForResult(pi.intentSender, pozmakKody, null, 0, 0, 0)
+            } else {
+                val n = contentResolver.delete(uri, null, null)
+                result.success(n > 0)
+            }
+        } catch (e: RecoverableSecurityException) {
+            try {
+                garashylyanNetije = result
+                garashylyanUri = uri
+                startIntentSenderForResult(
+                    e.userAction.actionIntent.intentSender, pozmakKody, null, 0, 0, 0
+                )
+            } catch (x: Exception) {
+                garashylyanNetije = null
+                garashylyanUri = null
+                result.error("DEL", x.message, null)
+            }
+        } catch (e: Exception) {
+            garashylyanNetije = null
+            garashylyanUri = null
+            result.error("DEL", e.message, null)
+        }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        if (requestCode == pozmakKody) {
+            val r = garashylyanNetije
+            val u = garashylyanUri
+            garashylyanNetije = null
+            garashylyanUri = null
+            if (r != null) {
+                if (resultCode == Activity.RESULT_OK) {
+                    if (Build.VERSION.SDK_INT == Build.VERSION_CODES.Q && u != null) {
+                        try {
+                            val n = contentResolver.delete(u, null, null)
+                            r.success(n > 0)
+                        } catch (e: Exception) {
+                            r.success(false)
+                        }
+                    } else {
+                        r.success(true)
+                    }
+                } else {
+                    r.success(false)
+                }
+            }
+            return
+        }
+        super.onActivityResult(requestCode, resultCode, data)
+    }
+}
