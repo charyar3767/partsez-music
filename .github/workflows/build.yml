@@ -1,0 +1,37 @@
+name: Build APK
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Android papkasyny doret
+        run: flutter create . --platforms=android --project-name partsez_music --org com.partsez
+
+      - name: Manifesti sazla
+        run: python3 tools/patch_android.py
+
+      - run: flutter pub get
+
+      - name: App icon doret
+        run: dart run flutter_launcher_icons
+
+      - run: flutter build apk --release --split-per-abi
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: partsez-music-apk
+          path: build/app/outputs/flutter-apk/*.apk
