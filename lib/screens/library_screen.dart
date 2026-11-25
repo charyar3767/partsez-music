@@ -81,12 +81,16 @@ class _LibraryScreenState extends State<LibraryScreen> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       title: const Text('Maglumaty üýtget'),
       content: Column(mainAxisSize: MainAxisSize.min, children: [
-        TextField(controller: adyK, decoration: const InputDecoration(labelText: 'Aýdymyň ady')),
+        TextField(controller: adyK, decoration: const InputDecoration(labelText: 'Aýdymyň ady')), 
         const SizedBox(height: 12),
         TextField(controller: artK, decoration: const InputDecoration(labelText: 'Artist')),
       ]),
       actions: [
-        if (bar) TextButton(onPressed: () => Navigator.pop(ctx, 'reset'), child: const Text('Asyl adyna gaýt'),
+        if (bar)
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, 'reset'),
+            child: const Text('Asyl adyna gaýt'),
+          ),
         TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Goýbolsun')),
         FilledButton(onPressed: () => Navigator.pop(ctx, 'save'), child: const Text('Sakla')),
       ],
@@ -131,7 +135,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
       ]), actions: [IconButton(onPressed: _baslat, tooltip: 'Täzele', icon: const Icon(Icons.refresh_rounded))]),
       body: _govdeKur(),
       bottomNavigationBar: const SafeArea(top: false, child: KiciOynadyjy()),
-    ));
+    );
   }
 
   Widget _tabKur(String ady, int nomer, IconData icon) {
@@ -147,7 +151,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
   Widget _govdeKur() {
     if (_yuklenyar) return const Center(child: CircularProgressIndicator(color: Renkler.esasy));
     if (_ygtyyarYok) return Center(child: Padding(padding: const EdgeInsets.all(28), child: Column(mainAxisSize: MainAxisSize.min, children: [
-      Container(width: 84, height: 84, decoration: BoxDecoration(color: Renkler.kart, borderRadius: BorderRadius.circular(24)), child: const Icon(Icons.lock_outline_rounded, size: 40, color: Renkler.esasy)),
+      Container(width: 84, height: 84, decoration: BoxDecoration(color: Renkler.kart, borderRadius: BorderRadius.circular(24)), child: const Icon(Icons.lock_outline_rounded, size: 40, color: Renkler.tekstSoluk)),
       const SizedBox(height: 18), const Text('Aýdymlary okumaga rugsat gerek', textAlign: TextAlign.center), const SizedBox(height: 14),
       FilledButton.icon(onPressed: _baslat, icon: const Icon(Icons.security_rounded), label: const Text('Rugsat ber')),
     ])));
@@ -157,7 +161,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
         onChanged: (q) => setState(() => _soz = q.trim().toLowerCase()),
         style: const TextStyle(fontSize: 14),
         decoration: InputDecoration(hintText: _tab == 2 && _papka == null ? 'Papkadan gözle' : 'Aydym ýa-da artist gözle', hintStyle: const TextStyle(color: Renkler.tekstSoluk),
-          prefixIcon: const Icon(Icons.search_rounded, color: Renkler.tekstSoluk), suffixIcon: _soz.isEmpty ? null : IconButton(onPressed: () => setState(() => _soz = ''), icon: const Icon(Icons.close_rounded, size: 18)),
+          prefixIcon: const Icon(Icons.search_rounded, color: Renkler.tekstSoluk), suffixIcon: _soz.isEmpty ? null : IconButton(onPressed: () => setState(() => _soz = ''), icon: const Icon(Icons.clear_rounded)),
           border: InputBorder.none, contentPadding: const EdgeInsets.symmetric(vertical: 15)),
       ))),
       SizedBox(height: 42, child: ListView(padding: const EdgeInsets.symmetric(horizontal: 12), scrollDirection: Axis.horizontal, children: [
@@ -196,7 +200,8 @@ class _LibraryScreenState extends State<LibraryScreen> {
       final sanaw = _sanawyAl(fav);
       if (sanaw.isEmpty) return Center(child: Text(_tab == 1 ? 'Enteke halanan aýdym ýok' : 'Hiç zat tapylmady', style: const TextStyle(color: Renkler.tekstSoluk)));
       return ValueListenableBuilder<int>(valueListenable: _h.yndeks, builder: (_, __, ___) { final id = _h.hazirki?.id ?? -1;
-        return ListView.builder(padding: const EdgeInsets.only(bottom: 8), itemCount: sanaw.length, itemBuilder: (_, index) { final a = sanaw[index]; return AydymKart(aydym: a, oynayar: a.id == id, onTap: () => _oynatVeAc(sanaw, index), onEdit: () => _duzelt(a), onDelete: () => _poz(a)); });
+        return ListView.builder(padding: const EdgeInsets.only(bottom: 8), itemCount: sanaw.length, itemBuilder: (_, index) { final a = sanaw[index]; return AydymKart(aydym: a, oynayar: a.id == id,
+          onTap: () => _oynatVeAc(sanaw, index), onEdit: () => _duzelt(a), onDelete: () => _poz(a), onFavorite: () => FavoritHyzmat.instance.gecir(a.id)); });
       });
     });
   }
