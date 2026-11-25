@@ -1,0 +1,90 @@
+name: Build APK
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.5'
+          channel: stable
+          cache: true
+
+      - name: Android papkasyny doret
+        run: flutter create . --platforms=android --project-name partsez_music --org com.partsez
+
+      - name: Manifesti sazla
+        run: python3 tools/patch_android.py
+
+      - name: Gradle sazlamalary
+        run: |
+          {
+            echo "org.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=1g"
+            echo "kotlin.jvm.target.validation.mode=IGNORE"
+            echo "android.suppressUnsupportedCompileSdk=35"
+          } >> android/gradle.properties
+
+      - name: Permission importyny duzet
+        run: |
+          sed -i "s#import 'package:permission_handler/permission_handler.dart' show Permission;#import 'package:permission_handler/permission_handler.dart';#" lib/screens/library_screen.dart
+          grep -n "permission_handler" lib/screens/library_screen.dart
+
+      - run: flutter pub get
+
+      - name: Plugin namespace duzet
+        run: |
+          python3 - <<'PY'
+          import glob, os, re
+          root = os.path.expanduser('~/.pub-cache/hosted/pub.dev')
+          for g in glob.glob(root + '/*/android/build.gradle'):
+              s = open(g, encoding='utf-8').read()
+              if re.search(r'^\s*namespace\b', s, re.M):
+                  continue
+              man = os.path.join(os.path.dirname(g), 'src/main/AndroidManifest.xml')
+              if not os.path.exists(man):
+                  continue
+              m = re.search(r'package="([^"]+)"', open(man, encoding='utf-8').read())
+              if not m:
+                  continue
+              s2 = re.sub(r'(\n\s*android\s*\{)', r'\1\n    namespace "' + m.group(1) + '"', s, count=1)
+              open(g, 'w', encoding='utf-8').write(s2)
+              print('namespace goshuldy:', g, m.group(1))
+          PY
+
+      - name: App icon doret
+        run: dart run flutter_launcher_icons
+
+      - name: APK gur
+        run: |
+          set -o pipefail
+          flutter build apk --release --split-per-abi 2>&1 | tee build.log
+
+      - name: Yalnyslygyn sebabini gorkez
+        if: failure()
+        run: |
+          echo "=========== YALNYSLYK ==========="
+          grep -n -B2 -A25 "What went wrong" build.log | head -80 || true
+          grep -n "error:" build.log | head -30 || true
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: build-log
+          path: build.log
+          if-no-files-found: ignore
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: partsez-music-apk
+          path: build/app/outputs/flutter-apk/*.apk
