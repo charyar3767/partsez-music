@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:just_audio_background/just_audio_background.dart';
 import 'screens/library_screen.dart';
 import 'services/duzeltme_service.dart';
@@ -7,6 +8,12 @@ import 'theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+    statusBarColor: Colors.transparent,
+    statusBarIconBrightness: Brightness.light,
+    systemNavigationBarColor: Renkler.fon,
+    systemNavigationBarIconBrightness: Brightness.light,
+  ));
   await JustAudioBackground.init(
     androidNotificationChannelId: 'com.partsez.music.channel.audio',
     androidNotificationChannelName: 'Partsez Music',
@@ -25,19 +32,7 @@ class PartsezMusicApp extends StatelessWidget {
     return MaterialApp(
       title: 'Partsez Music',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        brightness: Brightness.dark,
-        scaffoldBackgroundColor: Renkler.fon,
-        colorScheme: const ColorScheme.dark(
-          primary: Renkler.esasy,
-          secondary: Renkler.goshmaca,
-        ),
-        sliderTheme: const SliderThemeData(
-          activeTrackColor: Renkler.esasy,
-          thumbColor: Renkler.goshmaca,
-          inactiveTrackColor: Color(0x33FFFFFF),
-        ),
-      ),
+      theme: partsezTema(),
       home: const LibraryScreen(),
     );
   }

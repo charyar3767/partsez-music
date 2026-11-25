@@ -12,73 +12,71 @@ class KiciOynadyjy extends StatelessWidget {
     final h = OynadyjyHyzmat.instance;
     return AnimatedBuilder(
       animation: Listenable.merge([h.yndeks, h.sanaw]),
-      builder: (context, _) {
+      builder: (_, __) {
         final a = h.hazirki;
         if (a == null) return const SizedBox.shrink();
-        return GestureDetector(
-          onTap: () {
-            Navigator.of(context).push(
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(10, 0, 10, 8),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(18),
+            onTap: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const OynadyjyEkrany()),
-            );
-          },
-          child: Container(
-            margin: const EdgeInsets.fromLTRB(10, 0, 10, 10),
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Renkler.kart,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Renkler.esasy.withOpacity(0.5)),
             ),
-            child: Row(
-              children: [
-                QueryArtworkWidget(
-                  id: a.id,
-                  type: ArtworkType.AUDIO,
-                  artworkBorder: BorderRadius.circular(10),
-                  nullArtworkWidget: Container(
-                    width: 46,
-                    height: 46,
-                    decoration: BoxDecoration(
-                      gradient: Renkler.gradient,
-                      borderRadius: BorderRadius.circular(10),
+            child: Container(
+              height: 68,
+              padding: const EdgeInsets.fromLTRB(8, 8, 6, 8),
+              decoration: BoxDecoration(
+                gradient: Renkler.kartGradient,
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: Renkler.esasy.withOpacity(.28)),
+                boxShadow: const [BoxShadow(
+                  color: Color(0x66000000), blurRadius: 18, offset: Offset(0, 6),
+                )],
+              ),
+              child: Row(children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: SizedBox(width: 52, height: 52,
+                    child: QueryArtworkWidget(
+                      id: a.id,
+                      type: ArtworkType.AUDIO,
+                      artworkFit: BoxFit.cover,
+                      nullArtworkWidget: Container(
+                        decoration: const BoxDecoration(gradient: Renkler.gradient),
+                        child: const Icon(Icons.music_note_rounded, color: Colors.white),
+                      ),
                     ),
-                    child: const Icon(Icons.music_note, color: Colors.white),
                   ),
                 ),
                 const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(a.ady,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontWeight: FontWeight.w600)),
-                      Text(a.artist,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                              color: Renkler.tekstSoluk, fontSize: 12)),
-                    ],
-                  ),
-                ),
+                Expanded(child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(a.ady, maxLines: 1, overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13)),
+                    const SizedBox(height: 3),
+                    Text(a.artist, maxLines: 1, overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(color: Renkler.tekstSoluk, fontSize: 11)),
+                  ],
+                )),
                 StreamBuilder<bool>(
                   stream: h.player.playingStream,
                   initialData: h.player.playing,
-                  builder: (context, snap) {
-                    final oynayar = snap.data ?? false;
+                  builder: (_, snap) {
+                    final playing = snap.data ?? false;
                     return IconButton(
-                      icon: Icon(oynayar ? Icons.pause : Icons.play_arrow),
                       onPressed: h.bashlaDurdur,
+                      icon: Container(
+                        width: 38, height: 38,
+                        decoration: const BoxDecoration(gradient: Renkler.gradient, shape: BoxShape.circle),
+                        child: Icon(playing ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                            color: Colors.white, size: 23),
+                      ),
                     );
                   },
                 ),
-                IconButton(
-                  icon: const Icon(Icons.skip_next),
-                  onPressed: () => h.indiki(),
-                ),
-              ],
+              ]),
             ),
           ),
         );
